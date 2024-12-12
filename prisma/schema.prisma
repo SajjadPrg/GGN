@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  password     String
+  resetPassKey String?
+  active       Boolean   @default(false)
+  email        String    @unique
+  comments     Comment[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Post {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  category    String
+  sections    Section[]
+  comments    Comment[]
+  tags        Tag[]     @relation("PostTags")
+}
+
+model Media {
+  id        String    @id @default(cuid())
+  type      MediaType
+  url       String
+  sectionId String
+  Section   Section   @relation(fields: [sectionId], references: [id])
+}
+
+model Section {
+  id      String  @id @default(cuid())
+  title   String
+  content String // متن یا توضیحات
+  media   Media[]
+  Post    Post?   @relation(fields: [postId], references: [id])
+  postId  String?
+}
+
+model Comment {
+  id     String @id @default(cuid())
+  text   String
+  userId String
+  postId String
+  user   User   @relation(fields: [userId], references: [id])
+  post   Post   @relation(fields: [postId], references: [id])
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String @unique
+  posts Post[] @relation("PostTags")
+}
+
+enum MediaType {
+  Image
+  Video
+  Audio
+  Gif
+  Other
+}
